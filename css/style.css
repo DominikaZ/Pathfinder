@@ -1,0 +1,103 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    background: #f2f2f2;
+}
+
+header {
+    margin-bottom: 2em;
+}
+
+a {
+    text-decoration: none;
+}
+
+#main-nav {
+    display: flex;  
+    justify-content: space-around;
+    align-items: center;
+    background: #4e0e0e;
+}
+
+.logo {
+    color: rgb(228, 217, 217);
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    font-size: 1.5em;
+}
+
+#main-nav ul {
+    width: 40%;
+}
+
+#main-nav i {
+    margin-left: 0.3em;
+}
+
+#main-nav a {
+    color: #f6f7f8;
+    background: #4e0e0e;
+    display: flex;
+    height: 4em;
+    width: 10em;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.4s;
+}
+
+#main-nav a:hover {
+    background: #741818;
+}
+
+#main-nav ul {
+    list-style: none;
+    display: flex;
+}
+
+#main-nav li {
+    width: 100%;
+    text-align: center;
+    position: relative;
+}
+
+#main-nav li:hover .submenu > li {
+    display: block;
+    top: 0px;
+}
+
+.submenu li {
+    display: none;
+    position: absolute;
+    top: 0px;
+}
+
+.submenu {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    width: 100%;
+}
+
+.btn {
+    color: b
+    padding: 1em 1em;
+    background: #0e4e0e;
+}
+
+
+canvas {
+    padding: 0;
+    margin: 0;
+    margin-left: 1em;
+    margin-bottom: 1em;
+    border: 1px solid #1bafee;
+}

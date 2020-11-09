@@ -5,8 +5,7 @@ var canvas = tools.id('canvas');  //find canvas
 canvas.width = window.innerWidth - 50;
 canvas.height = window.innerHeight - 60;
 let ctx = canvas.getContext("2d");        // methods for drawing
-let speed = 0;
-
+let fps = 16;
 
 var cols = 40;
 var rows = 20;
@@ -31,6 +30,12 @@ class Node {
 
         this.neighbours = [];   // array of nodes
         this.findNeighbours();
+        this.predecessor = null;
+    }
+
+    restart() {
+        this.visited = Color.W;
+        this.distance = Number.POSITIVE_INFINITY;
         this.predecessor = null;
     }
 
@@ -62,7 +67,18 @@ class Node {
         }
     }
 
-    show(color) {
+    sleep() {
+        setTimeout(() => {
+            return new Promise(requestAnimationFrame);
+        }, 1000 / 100);
+    }
+
+    // async render() {
+    //     this.show();              // paint Node on HTML canvas
+    //     await this.sleep();       // wait until next repaint
+    // }
+
+    async show(color) {
         //nakresli sa stvorcek
         ctx.beginPath();
         ctx.strokeStyle = "#1bafee";
@@ -72,6 +88,7 @@ class Node {
         ctx.fill();
     }
 }
+
 
 function init() {
     //2d array to store Nodes
@@ -86,11 +103,21 @@ function init() {
     }
 
     start = grid[0][0];
-    end = grid[cols - 1][rows - 1];
+    end = grid[0][5];
 
     start.show("yellow");
     end.show("yellow");
 }
+
+
+function restart() {
+    for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+            grid[i][j].restart();
+        }
+    }
+}
+
 
 function findPath() {
     let current = end;
@@ -98,6 +125,7 @@ function findPath() {
         current.show("yellow");
         current = current.predecessor;
     }
+    current.show("yellow");
 }
 
 // ALGORYTMY
@@ -112,6 +140,10 @@ function bfs(instant) {
     } else {
         while (queue.length() > 0) {
             let current = queue.deque();
+            if (current === end) {
+                break;
+            }
+
             for (const nCoordinates of current.neighbours) {
                 let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
                 if (neighbour.visited == Color.W) {     // novy
@@ -132,6 +164,10 @@ function bfs(instant) {
 
 function bfsInterval(queue) {
     let current = queue.deque();
+    if (current === end) {
+        findPath();
+        return;
+    }
     for (const nCoordinates of current.neighbours) {
         let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
         if (neighbour.visited == Color.W) {     // novy
@@ -160,26 +196,30 @@ function bfsInterval(queue) {
 
 
 function dfs(instant) {
+    if (instant) {
+        dfsR();
+    } else {
+        dfsI();
+    }
+}
+
+function dfsR() {
     for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
-            if (grid[i][j].visited == Color.W) {
-                if (instant) {
-                    dfsRec(grid[i][j]);
-                } else {
-                    setTimeout(() => {
-                        requestAnimationFrame(function () {
-                            dfsRec(grid[i][j]);
-                        })
-
-                    }, 1000 / 25);
-                }
+            if (grid[i][j] == end) {
+                findPath();
+                break;
             }
+            dfsRec(grid[i][j]);
         }
     }
-    findPath();
 }
 
 function dfsRec(current) {
+    if (current == end) {
+        findPath();
+        return;
+    }
     current.visited = Color.G;
     current.show("blue");
     for (const nCoordinates of current.neighbours) {
@@ -193,23 +233,61 @@ function dfsRec(current) {
     current.show("red");
 }
 
-function dfsInterval(current) {
+
+async function dfsI() {
+    for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+            dfsInterval(grid[i][j]);
+        }
+    }
+    findPath();
+}
+
+
+// function dfsInterval(current) {
+//     setTimeout(() => {
+//         requestAnimationFrame(function () {
+//             current.visited = Color.G;
+//             current.show("blue");
+//             for (const nCoordinates of current.neighbours) {
+//                 let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
+//                 if (neighbour.visited == Color.W) {
+//                     neighbour.predecessor = current;
+//                     dfsInterval(neighbour);
+//                 };
+//             }
+//             current.visited = Color.B;
+//             current.show("red");
+//         })
+
+//     }, 1000 / 100);
+// }
+
+async function dfsInterval(current) {
     current.visited = Color.G;
     current.show("blue");
+
+    await dfsfor(current);
+
+    current.visited = Color.B;
+    current.show("red");
+
+}
+
+async function dfsfor(current) {
     for (const nCoordinates of current.neighbours) {
         let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
         if (neighbour.visited == Color.W) {
             neighbour.predecessor = current;
+
             setTimeout(() => {
                 requestAnimationFrame(function () {
                     dfsInterval(neighbour);
                 })
 
-            }, 1000 / 25);
-        }
+            }, 1000 / fps);
+        };
     }
-    current.visited = Color.B;
-    current.show("red");
 }
 
 
@@ -244,5 +322,5 @@ function djikstra() {
 //render();
 init();
 //bfs(false);
-//dfs(false);
-djikstra();
+dfs(false);
+//djikstra();

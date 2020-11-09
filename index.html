@@ -4,16 +4,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/e4a8d75402.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./css/style.css">
 
     <title>PathFinder</title>
 </head>
 
 <body>
 
-    <h1>Welcome to PathFinder</h1>
-    <canvas id="canvas"></canvas>
+    <header>
 
+        <nav id="main-nav">
+
+            <div class="logo">
+                <h4>PathFinder</h4>
+            </div>
+
+            <ul>
+                <li><a href="#">Display<i class="fas fa-caret-down"></i></a>
+                    <ul class="submenu">
+                        <li><a href="#">grid</a></li>
+                        <li><a href="#">nodes</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="#">Algorithms<i class="fas fa-caret-down"></i></a>
+                    <ul class="submenu">
+                        <li><a href="#">BFS</a></li>
+                        <li><a href="#">DFS</a></li>
+                        <li><a href="#">Djikstra</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="#">Speed<i class="fas fa-caret-down"></i></a>
+
+                    <ul class="submenu">
+                        <li><a href="#">none</a></li>
+                        <li><a href="#">slow</a></li>
+                        <li><a href="#">quick</a></li>
+                    </ul>
+
+                </li>
+
+                <li><a href="#">Clear</a></li>
+                <li><a href="#">Reset</a></li>
+                <li><a href="#">Start</a></li>
+            </ul>
+
+        </nav>
+
+    </header>
+
+    <main>
+        <canvas id="canvas"></canvas>
+
+
+    </main>
+
+    <footer>
+
+    </footer>
 
 
     <script type="module" src="./js/script.js"></script>
