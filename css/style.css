@@ -34,10 +34,6 @@ a {
     font-size: 1.5em;
 }
 
-#main-nav ul {
-    width: 40%;
-}
-
 #main-nav i {
     margin-left: 0.3em;
 }
@@ -87,10 +83,28 @@ a {
     width: 100%;
 }
 
-.btn {
-    color: b
-    padding: 1em 1em;
-    background: #0e4e0e;
+#special1 a,
+#special2 a {
+    height: 2.5em;
+    width: 7em;
+    border-radius: 0.2em;
+}
+
+#special1 a {
+    margin-right: 1em;
+    background-color: rgb(235, 94, 0);
+}
+
+#special1 a:hover {
+    background-color: rgb(233, 122, 48);
+}
+
+#special2 a {
+    background: #136b13;
+}
+
+#special2 a:hover {
+    background: #1a801a;
 }
 
 
