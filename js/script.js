@@ -4,16 +4,18 @@ import * as tools from './tools.js';
 var canvas = tools.id('canvas');  //find canvas
 canvas.width = window.innerWidth - 50;
 canvas.height = window.innerHeight - 60;
-let ctx = canvas.getContext("2d");        // methods for drawing
-let fps = 16;
+let ctx = canvas.getContext("2d");        // methods for drawing let fps = 50;
 
-var cols = 40;
-var rows = 20;
+//var cols = 40;
+//var rows = 20;
+var cols = 5;
+var rows = 5;
 var w = canvas.width / cols; // width of one node
 var h = canvas.height / rows; // height of one node
 var start;
 var end;
 let grid = new Array();
+let diagonal = true;
 
 const Color = {
     W: -1,      // not seen
@@ -40,51 +42,64 @@ class Node {
     }
 
     findNeighbours() {
-        // giving there only pairs of coordinates, not objects = Nodes, so I dont have to go through grid again and also it is less space
+        // only pairs of coordinates, not objects (less space)
+        // diagonals are going last
         if (this.y > 0) {
-            this.neighbours.push([this.x, this.y - 1]);
-        }
-        if (this.y > 0 && this.x < cols - 1) {
-            this.neighbours.push([this.x + 1, this.y - 1]);
+            this.neighbours.push([this.x, this.y - 1]); //up
         }
         if (this.x < cols - 1) {
-            this.neighbours.push([this.x + 1, this.y]);
-        }
-        if (this.x < cols - 1 && this.y < rows - 1) {
-            this.neighbours.push([this.x + 1, this.y + 1]);
+            this.neighbours.push([this.x + 1, this.y]); //right
         }
         if (this.y < rows - 1) {
-            this.neighbours.push([this.x, this.y + 1]);
-        }
-        if (this.x > 0 && this.y < rows - 1) {
-            this.neighbours.push([this.x - 1, this.y + 1]);
+            this.neighbours.push([this.x, this.y + 1]); //down
         }
         if (this.x > 0) {
-            this.neighbours.push([this.x - 1, this.y]);
+            this.neighbours.push([this.x - 1, this.y]); //left
         }
-        if (this.x > 0 && this.y > 0) {
-            this.neighbours.push([this.x - 1, this.y - 1]);
+
+        if (diagonal) {
+            if (this.y > 0 && this.x < cols - 1) {
+                this.neighbours.push([this.x + 1, this.y - 1]); // diagonal right up
+            }
+            if (this.x < cols - 1 && this.y < rows - 1) {
+                this.neighbours.push([this.x + 1, this.y + 1]); // diagonal right down
+            }
+            if (this.x > 0 && this.y < rows - 1) {
+                this.neighbours.push([this.x - 1, this.y + 1]); // diagonal left down
+            }
+            if (this.x > 0 && this.y > 0) {
+                this.neighbours.push([this.x - 1, this.y - 1]); //diagonal left up
+            }
         }
+
     }
 
-    sleep() {
-        setTimeout(() => {
-            return new Promise(requestAnimationFrame);
-        }, 1000 / 100);
-    }
-
-    // async render() {
-    //     this.show();              // paint Node on HTML canvas
-    //     await this.sleep();       // wait until next repaint
-    // }
-
-    async show(color) {
+    show(color) {
         //nakresli sa stvorcek
         ctx.beginPath();
         ctx.strokeStyle = "#1bafee";
         ctx.fillStyle = color;
         ctx.rect(this.x * w, this.y * h, w, h);
         ctx.stroke();
+        ctx.fill();
+    }
+
+    async wait() {
+        if (fps === 0) {
+            return;
+        }
+        return new Promise(resolve => {
+            setTimeout(resolve, fps);
+        });
+    }
+
+    async animate(color) {
+        ctx.beginPath();
+        ctx.strokeStyle = "#1bafee";
+        ctx.fillStyle = color;
+        ctx.rect(this.x * w, this.y * h, w, h);
+        ctx.stroke();
+        await this.wait();
         ctx.fill();
     }
 }
@@ -103,7 +118,7 @@ function init() {
     }
 
     start = grid[0][0];
-    end = grid[0][5];
+    end = grid[0][3];
 
     start.show("yellow");
     end.show("yellow");
@@ -119,175 +134,78 @@ function restart() {
 }
 
 
-function findPath() {
+async function findPath() {
     let current = end;
     while (current != start) {
-        current.show("yellow");
+        await current.animate("yellow");
         current = current.predecessor;
     }
-    current.show("yellow");
+    await current.animate("yellow");
 }
 
 // ALGORYTMY
 
-function bfs(instant) {
+async function bfs() {
     let queue = new tools.Queue();
     queue.enqueue(start);
     start.distance = 0;
 
-    if (!instant) {
-        bfsInterval(queue);
-    } else {
-        while (queue.length() > 0) {
-            let current = queue.deque();
-            if (current === end) {
-                break;
+    while (queue.length() > 0) {
+        let current = queue.deque();
+        if (current === end) {
+            break;
+        }
+
+        for (const nCoordinates of current.neighbours) {
+            let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
+            if (neighbour.visited == Color.W) {     // found new
+                await neighbour.animate("blue");
+                neighbour.visited = Color.G;
+                neighbour.distance = current.distance + 1;
+                neighbour.predecessor = current;
+                queue.enqueue(neighbour);
             }
-
-            for (const nCoordinates of current.neighbours) {
-                let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
-                if (neighbour.visited == Color.W) {     // novy
-                    neighbour.show("blue");
-                    neighbour.visited = Color.G;
-                    neighbour.distance = current.distance + 1;
-                    neighbour.predecessor = current;
-                    queue.enqueue(neighbour);
-                }
-            }
-
-            current.visited = Color.B;
-            current.show("red");
         }
-        findPath();
-    }
-}
 
-function bfsInterval(queue) {
-    let current = queue.deque();
-    if (current === end) {
-        findPath();
-        return;
+        current.visited = Color.B;
+        await current.animate("red");
     }
-    for (const nCoordinates of current.neighbours) {
-        let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
-        if (neighbour.visited == Color.W) {     // novy
-            neighbour.show("blue");
-            neighbour.visited = Color.G;
-            neighbour.distance = current.distance + 1;
-            neighbour.predecessor = current;
-            queue.enqueue(neighbour);
-        }
-    }
-
-    current.visited = Color.B;
-    current.show("red");
-    if (queue.length() > 0) {
-        const fps = 1000;       // control speed
-        setTimeout(() => {
-            requestAnimationFrame(function () {
-                bfsInterval(queue);
-            })
-
-        }, 1000 / fps);
-    } else {
-        findPath();
-    }
+    await findPath();
 }
 
 
-function dfs(instant) {
-    if (instant) {
-        dfsR();
-    } else {
-        dfsI();
-    }
-}
-
-function dfsR() {
-    for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-            if (grid[i][j] == end) {
-                findPath();
-                break;
-            }
-            dfsRec(grid[i][j]);
-        }
-    }
-}
-
-function dfsRec(current) {
-    if (current == end) {
-        findPath();
-        return;
-    }
-    current.visited = Color.G;
-    current.show("blue");
-    for (const nCoordinates of current.neighbours) {
-        let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
-        if (neighbour.visited == Color.W) {
-            neighbour.predecessor = current;
-            dfsRec(neighbour);
-        }
-    }
-    current.visited = Color.B;
-    current.show("red");
-}
-
-
-async function dfsI() {
-    for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-            dfsInterval(grid[i][j]);
-        }
-    }
-    findPath();
-}
-
-
-// function dfsInterval(current) {
-//     setTimeout(() => {
-//         requestAnimationFrame(function () {
-//             current.visited = Color.G;
-//             current.show("blue");
-//             for (const nCoordinates of current.neighbours) {
-//                 let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
-//                 if (neighbour.visited == Color.W) {
-//                     neighbour.predecessor = current;
-//                     dfsInterval(neighbour);
-//                 };
+// for maze discovery
+// async function dfsAll() {
+//     for (let i = 0; i < cols; i++) {
+//         for (let j = 0; j < rows; j++) {
+//             if (grid[i][j] == end) {
+//                 await findPath();
+//                 break;
 //             }
-//             current.visited = Color.B;
-//             current.show("red");
-//         })
-
-//     }, 1000 / 100);
+//             await dfsRec(grid[i][j]);
+//         }
+//     }
 // }
 
-async function dfsInterval(current) {
+
+async function dfs(current) {
     current.visited = Color.G;
-    current.show("blue");
-
-    await dfsfor(current);
-
-    current.visited = Color.B;
-    current.show("red");
-
-}
-
-async function dfsfor(current) {
+    await current.animate("blue");
+    if (current === end) {
+        findPath();
+    }
     for (const nCoordinates of current.neighbours) {
         let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
         if (neighbour.visited == Color.W) {
             neighbour.predecessor = current;
-
-            setTimeout(() => {
-                requestAnimationFrame(function () {
-                    dfsInterval(neighbour);
-                })
-
-            }, 1000 / fps);
+            await dfs(neighbour);
+            if (end.visited == Color.G) {
+                return;
+            }
         };
     }
+    current.visited = Color.B;
+    await current.animate("red");
 }
 
 
@@ -316,11 +234,9 @@ function djikstra() {
 
 
 
-
-
-
 //render();
 init();
-//bfs(false);
-dfs(false);
+//bfs();
+dfs(start);
+findPath();
 //djikstra();
