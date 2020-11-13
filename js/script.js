@@ -4,12 +4,13 @@ import * as tools from './tools.js';
 var canvas = tools.id('canvas');  //find canvas
 canvas.width = window.innerWidth - 50;
 canvas.height = window.innerHeight - 60;
-let ctx = canvas.getContext("2d");        // methods for drawing let fps = 50;
+let ctx = canvas.getContext("2d");        // methods for drawing 
+let fps = 50;
 
-//var cols = 40;
-//var rows = 20;
-var cols = 5;
-var rows = 5;
+var cols = 40;
+var rows = 20;
+// var cols = 5;
+// var rows = 5;
 var w = canvas.width / cols; // width of one node
 var h = canvas.height / rows; // height of one node
 var start;
@@ -118,7 +119,8 @@ function init() {
     }
 
     start = grid[0][0];
-    end = grid[0][3];
+    end = grid[cols - 1][rows - 1]
+    //end = grid[0][3];
 
     start.show("yellow");
     end.show("yellow");
@@ -174,20 +176,6 @@ async function bfs() {
 }
 
 
-// for maze discovery
-// async function dfsAll() {
-//     for (let i = 0; i < cols; i++) {
-//         for (let j = 0; j < rows; j++) {
-//             if (grid[i][j] == end) {
-//                 await findPath();
-//                 break;
-//             }
-//             await dfsRec(grid[i][j]);
-//         }
-//     }
-// }
-
-
 async function dfs(current) {
     current.visited = Color.G;
     await current.animate("blue");
@@ -209,26 +197,41 @@ async function dfs(current) {
 }
 
 
-function djikstra() {
+async function djikstra() {
+    if (start === end) {
+        findPath();
+        return;
+    }
+
     start.distance = 0;
     let pq = new tools.PQ();
     pq.enqueue(start, start.distance);
-    start.visited = Color.G;
 
-    while (pq.length() > 0) {
+
+    while (pq.size() > 0) {
         let pnode = pq.dequeue();     // I choose node with highest priority
         let current = pnode.val;
+        if (current.visited == Color.B) {
+            continue;
+        }
         current.visited = Color.B;
+        await current.animate("red");
         for (const nCoordinates of current.neighbours) {
             let neighbour = grid[nCoordinates[0]][nCoordinates[1]];
-            if (neighbour.color != Color.B && (neighbour.distance > current.distance + 1)) {  // not seen or seen but can be relaxed and not finished
+            if (neighbour.color != Color.B && (neighbour.distance > current.distance + 1)) {  // not seen or seen and can be relaxed (if Black already, cant be more relaxed) 
                 neighbour.predecessor = current;
                 neighbour.distance = current.distance + 1;
+
+                if (neighbour === end) {
+                    findPath();
+                    return;
+                }
+
                 pq.enqueue(neighbour, neighbour.distance);
+                await neighbour.animate("blue");
             }
         }
     }
-    findPath();
 }
 
 
@@ -236,7 +239,7 @@ function djikstra() {
 
 //render();
 init();
-//bfs();
-dfs(start);
-findPath();
+djikstra();
+//dfs(start);
+//findPath();
 //djikstra();
